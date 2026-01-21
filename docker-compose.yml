@@ -11,6 +11,16 @@ services:
       - "${NOTIFI_DB_PORT}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-
+  notification-service:
+    build:
+      context: ../notification-architecture-backend/notification-service
+      dockerfile: Dockerfile
+    container_name: notification-service
+    ports: 
+      - "${NOTIFI_SERVICE_PORT}:3000"
+    env_file:
+      - ../notification-architecture-backend/notification-service/.env
+    depends_on:
+      - database-notification-service
 volumes:
   postgres_data:
