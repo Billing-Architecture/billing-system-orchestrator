@@ -22,5 +22,14 @@ services:
       - ../notification-architecture-backend/notification-service/.env
     depends_on:
       - database-notification-service
+  billing-service:
+    build:
+      context: ../notification-architecture-backend/billing-service
+      dockerfile: Dockerfile
+    container_name: billing-service
+    ports:
+      - "${BILLING_SERVICE_PORT}:8080"
+    env_file:
+      - ../notification-architecture-backend/billing-service/.env
 volumes:
   postgres_data:
