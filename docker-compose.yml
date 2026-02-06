@@ -10,7 +10,19 @@ services:
     ports:
       - "${NOTIFI_DB_PORT}:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_notification_data:/var/lib/postgresql/data
+  database-billing-service:
+    image: postgres:16
+    container_name: db-billing-service
+    restart: always
+    environment:
+      POSTGRES_DB: ${BILLING_DB_NAME}
+      POSTGRES_USER: ${BILLING_DB_USER}
+      POSTGRES_PASSWORD: ${BILLING_DB_PASSWORD}
+    ports:
+      - "${BILLING_DB_PORT}:5432"
+    volumes:
+      - postgres_billing_data:/var/lib/postgresql/data
   notification-service:
     build:
       context: ../notification-architecture-backend/notification-service
@@ -24,12 +36,15 @@ services:
       - database-notification-service
   billing-service:
     build:
-      context: ../notification-architecture-backend/billing-service
+      context: ../billing-architecture-backend/billing-service
       dockerfile: Dockerfile
     container_name: billing-service
     ports:
       - "${BILLING_SERVICE_PORT}:8080"
     env_file:
-      - ../notification-architecture-backend/billing-service/.env
+      - ../billing-architecture-backend/billing-service/.env
+    depends_on:
+      - database-billing-service
 volumes:
-  postgres_data:
+  postgres_notification_data:
+  postgres_billing_data:
