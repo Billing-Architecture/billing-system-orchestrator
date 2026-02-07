@@ -11,6 +11,11 @@ services:
       - "${NOTIFI_DB_PORT}:5432"
     volumes:
       - postgres_notification_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${NOTIFI_DB_USER}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
   database-billing-service:
     image: postgres:16
     container_name: db-billing-service
@@ -23,6 +28,11 @@ services:
       - "${BILLING_DB_PORT}:5432"
     volumes:
       - postgres_billing_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${BILLING_DB_USER}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
   notification-service:
     build:
       context: ../notification-architecture-backend/notification-service
@@ -33,7 +43,8 @@ services:
     env_file:
       - ../notification-architecture-backend/notification-service/.env
     depends_on:
-      - database-notification-service
+      database-notification-service:
+        condition: service_healthy
   billing-service:
     build:
       context: ../billing-architecture-backend/billing-service
@@ -44,7 +55,8 @@ services:
     env_file:
       - ../billing-architecture-backend/billing-service/.env
     depends_on:
-      - database-billing-service
+      database-billing-service:
+        condition: service_healthy
 volumes:
   postgres_notification_data:
   postgres_billing_data:
