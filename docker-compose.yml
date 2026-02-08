@@ -1,0 +1,62 @@
+services: 
+  database-notification-service:
+    image: postgres:16
+    container_name: db-notification-service
+    restart: always
+    environment:
+      POSTGRES_DB: ${NOTIFI_DB_NAME}
+      POSTGRES_USER: ${NOTIFI_DB_USER}
+      POSTGRES_PASSWORD: ${NOTIFI_DB_PASSWORD}
+    ports:
+      - "${NOTIFI_DB_PORT}:5432"
+    volumes:
+      - postgres_notification_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${NOTIFI_DB_USER}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+  database-billing-service:
+    image: postgres:16
+    container_name: db-billing-service
+    restart: always
+    environment:
+      POSTGRES_DB: ${BILLING_DB_NAME}
+      POSTGRES_USER: ${BILLING_DB_USER}
+      POSTGRES_PASSWORD: ${BILLING_DB_PASSWORD}
+    ports:
+      - "${BILLING_DB_PORT}:5432"
+    volumes:
+      - postgres_billing_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${BILLING_DB_USER}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+  notification-service:
+    build:
+      context: ../notification-architecture-backend/notification-service
+      dockerfile: Dockerfile
+    container_name: notification-service
+    ports: 
+      - "${NOTIFI_SERVICE_PORT}:3000"
+    env_file:
+      - ../notification-architecture-backend/notification-service/.env
+    depends_on:
+      database-notification-service:
+        condition: service_healthy
+  billing-service:
+    build:
+      context: ../billing-architecture-backend/billing-service
+      dockerfile: Dockerfile
+    container_name: billing-service
+    ports:
+      - "${BILLING_SERVICE_PORT}:8080"
+    env_file:
+      - ../billing-architecture-backend/billing-service/.env
+    depends_on:
+      database-billing-service:
+        condition: service_healthy
+volumes:
+  postgres_notification_data:
+  postgres_billing_data:
